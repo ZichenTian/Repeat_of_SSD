@@ -1,7 +1,8 @@
 from keras.layers import Input, Conv2D, MaxPooling2D, ZeroPadding2D, Flatten
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
-from keras.layers.core  import  Lambda
+from keras.layers.core  import  Lambda, Reshape
+from keras.layers.merge import concatenate
 from ssd_utils import L2_Normalization, L2_Normalization_Shape
 
 
@@ -13,11 +14,12 @@ class SSD300_Param(object):
 
 
 def SSD300(input_shape=(300,300,3), num_classes=21):
-    inputs = Input(shape=input_shape, name='inputs')       #input_shape一般是(300,300,3)
+    inputs = x = Input(shape=input_shape, name='inputs')       #input_shape一般是(300,300,3)
     #block1
     #(300,300,3)
+    #x = BatchNormalization()(x)
     x = Conv2D(filters = 64,kernel_size = (3,3), data_format='channels_last',
-                activation='relu',padding='same', name='conv1_1')(inputs)
+                activation='relu',padding='same', name='conv1_1')(x)
     x = Conv2D(filters = 64,kernel_size = (3,3), data_format='channels_last',
                 activation='relu',padding='same', name='conv1_2') (x)
     x = MaxPooling2D(pool_size=(2,2), strides=(2,2),padding='same', 
@@ -106,63 +108,103 @@ def SSD300(input_shape=(300,300,3), num_classes=21):
     x = Conv2D(filters = num_classes*k, kernel_size=(3,3), data_format='channels_last', #分类网络
                 activation=None, padding='same', name='conv4_3_norm_cls')(conv4_3_Norm)
     #(38,38,kc)
-    conv4_3_cls = Flatten(name='conv4_3_cls')(x)     #拉平
+    conv4_3_cls = Reshape((-1,num_classes), name='conv4_3_cls')(x)
+    #conv4_3_cls = Flatten(name='conv4_3_cls')(x)     #拉平
 
     x = Conv2D(filters = 4*k, kernel_size=(3,3), data_format='channels_last', #回归网络
-                activation=None, padding='same', name='conv4_3_norm_reg')(conv4_3_Norm)
-    conv4_3_reg = Flatten(name='conv4_3_reg')(x)             #拉平
+                activation='sigmoid', padding='same', name='conv4_3_norm_reg')(conv4_3_Norm)
+    conv4_3_reg = Reshape((-1, 4), name='conv4_3_reg')(x)
+    #conv4_3_reg = Flatten(name='conv4_3_reg')(x)             #拉平
     #layer2——conv7
     k = 6
     x = Conv2D(filters = num_classes*k, kernel_size=(3,3), data_format='channels_last', #分类网络
                 activation=None, padding='same', name='conv7_cls_before_flatten')(conv7)
-    conv7_cls = Flatten(name='conv7_cls')(x)
+    conv7_cls = Reshape((-1,num_classes), name='conv7_cls')(x)
+    #conv7_cls = Flatten(name='conv7_cls')(x)
     x = Conv2D(filters = 4*k, kernel_size=(3,3), data_format='channels_last', #分类网络
-                activation=None, padding='same', name='conv7_reg_before_flatten')(conv7)
-    conv7_reg = Flatten(name='conv7_reg')(x)
+                activation='sigmoid', padding='same', name='conv7_reg_before_flatten')(conv7)
+    conv7_reg = Reshape((-1, 4), name='conv7_reg')(x)
+    #conv7_reg = Flatten(name='conv7_reg')(x)
     #layer3——conv8_2
     k = 6
     x = Conv2D(filters = num_classes*k, kernel_size=(3,3), data_format='channels_last', #分类网络
                 activation=None, padding='same', name='conv8_2_cls_before_flatten')(conv8_2)
-    conv8_2_cls = Flatten(name='conv8_2_cls')(x)
+    conv8_2_cls = Reshape((-1,num_classes), name='conv8_2_cls')(x)
+    #conv8_2_cls = Flatten(name='conv8_2_cls')(x)
     x = Conv2D(filters = 4*k, kernel_size=(3,3), data_format='channels_last', #分类网络
-                activation=None, padding='same', name='conv8_2_reg_before_flatten')(conv8_2)
-    conv8_2_reg = Flatten(name='conv8_2_reg')(x)
+                activation='sigmoid', padding='same', name='conv8_2_reg_before_flatten')(conv8_2)
+    conv8_2_reg = Reshape((-1, 4), name='conv8_2_reg')(x)
+    #conv8_2_reg = Flatten(name='conv8_2_reg')(x)
     #layer4——conv9_2
     k = 6
     x = Conv2D(filters = num_classes*k, kernel_size=(3,3), data_format='channels_last', #分类网络
                 activation=None, padding='same', name='conv9_2_cls_before_flatten')(conv9_2)
-    conv9_2_cls = Flatten(name='conv9_2_cls')(x)
+    conv9_2_cls = Reshape((-1,num_classes), name='conv9_2_cls')(x)
+    #conv9_2_cls = Flatten(name='conv9_2_cls')(x)
     x = Conv2D(filters = 4*k, kernel_size=(3,3), data_format='channels_last', #分类网络
-                activation=None, padding='same', name='conv9_2_reg_before_flatten')(conv9_2)
-    conv9_2_reg = Flatten(name='conv9_2_reg')(x)
+                activation='sigmoid', padding='same', name='conv9_2_reg_before_flatten')(conv9_2)
+    conv9_2_reg = Reshape((-1, 4), name='conv9_2_reg')(x)
+    #conv9_2_reg = Flatten(name='conv9_2_reg')(x)
     #layer5——conv10_2
     k = 4
     x = Conv2D(filters = num_classes*k, kernel_size=(3,3), data_format='channels_last', #分类网络
                 activation=None, padding='same', name='conv10_2_cls_before_flatten')(conv10_2)
-    conv10_2_cls = Flatten(name='conv10_2_cls')(x)
+    conv10_2_cls = Reshape((-1,num_classes), name='conv10_2_cls')(x)
+    #conv10_2_cls = Flatten(name='conv10_2_cls')(x)
     x = Conv2D(filters = 4*k, kernel_size=(3,3), data_format='channels_last', #分类网络
-                activation=None, padding='same', name='conv10_2_reg_before_flatten')(conv10_2)
-    conv10_2_reg = Flatten(name='conv10_2_reg')(x)
+                activation='sigmoid', padding='same', name='conv10_2_reg_before_flatten')(conv10_2)
+    conv10_2_reg = Reshape((-1, 4), name='conv10_2_reg')(x)
+    #conv10_2_reg = Flatten(name='conv10_2_reg')(x)
     #layer6——conv11_2
     k = 4
     x = Conv2D(filters = num_classes*k, kernel_size=(3,3), data_format='channels_last', #分类网络
                 activation=None, padding='same', name='conv11_2_cls_before_flatten')(conv11_2)
-    conv11_2_cls = Flatten(name='conv11_2_cls')(x)
+    conv11_2_cls = Reshape((-1,num_classes), name='conv11_2_cls')(x)
+    #conv11_2_cls = Flatten(name='conv11_2_cls')(x)
     x = Conv2D(filters = 4*k, kernel_size=(3,3), data_format='channels_last', #分类网络
-                activation=None, padding='same', name='conv11_2_reg_before_flatten')(conv11_2)
-    conv11_2_reg = Flatten(name='conv11_2_reg')(x)
+                activation='sigmoid', padding='same', name='conv11_2_reg_before_flatten')(conv11_2)
+    conv11_2_reg = Reshape((-1, 4), name='conv11_2_reg')(x)
+    #conv11_2_reg = Flatten(name='conv11_2_reg')(x)
 
-    model = Model(inputs=inputs, outputs=[conv4_3_cls, conv4_3_reg, conv7_cls, conv7_reg, conv8_2_cls, 
-                                        conv8_2_reg, conv9_2_cls, conv9_2_reg, conv10_2_cls, conv10_2_reg, 
-                                        conv11_2_cls, conv11_2_reg])
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+    #开始组合这些预测结果
+    cls_all = concatenate([conv4_3_cls, conv7_cls, conv8_2_cls, conv9_2_cls, conv10_2_cls, conv11_2_cls], axis=1, name = 'cls_all')
+    reg_all = concatenate([conv4_3_reg, conv7_reg, conv8_2_reg, conv9_2_reg, conv10_2_reg, conv11_2_reg], axis=1, name = 'reg_all')
+    pred_all = concatenate([cls_all, reg_all], axis=-1, name='pred_all')
+
+
+    from ssd_losses import ssd_loss
+    from keras.optimizers import SGD
+
+    sgd = SGD(lr=1e-4, decay=1e-4, momentum=0.9, nesterov=True)
+    model = Model(inputs=inputs, outputs=pred_all)
+    model.compile(optimizer=sgd, loss=ssd_loss)#, metrics=['accuracy'])
+
+    
+
 
     return model
 
 model = SSD300()
-model.summary()
-from keras.utils import plot_model
-plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+#model.summary()
+#from keras.utils import plot_model
+#plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=True)
+
+from ssd_loaddata import generate_data_from_file, load_data
+import numpy as np
+
+
+x, y_true = load_data(batch_num =0)
+model.fit(x, y_true, epochs=30, batch_size=10, validation_split=0.01)
+
+'''
+batch_size = 128
+batch_num = 39
+model.fit_generator(generate_data_from_file(), steps_per_epoch=batch_num, epochs=10)
+'''
+'''
+x, y_true = load_data(batch_num = 39)
+model.fit(x, y_true, epochs=10, batch_size=5, verbose=1, validation_split=0.01)
+'''
 
 
     
