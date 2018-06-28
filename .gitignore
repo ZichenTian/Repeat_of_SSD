@@ -1,8 +1,8 @@
-/dataset/*
+dataset/*
 /__pycache__
-/datasave/*
-/logs/*
+datasave/*
+logs/*
 /pic
 /save
-/pretrain/*
-/checkpoint/*
+pretrain/*
+checkpoint/*
