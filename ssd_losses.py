@@ -32,22 +32,31 @@ def ssd_loss(y_true, y_pred):
 
     val, index = tf.nn.top_k(conf_loss_n, k=tf.cast(n_num, tf.int32))
     top_k_threshhold = val[-1]  #val会默认从大到小排序，因此取出最小的值来
-    hnmask = tf.cast(conf_loss_n >= top_k_threshhold, tf.float32)
+    
+    hnmask = tf.cast(tf.greater_equal(conf_loss_n, top_k_threshhold), tf.float32)
 
     p_conf_loss = tf.reduce_sum(conf_loss_all * fpmask)
     hn_conf_loss = tf.reduce_sum(conf_loss_all * hnmask)
-
+    
+    '''
+    L1_loss_all = tf.abs(y_true_reg - y_pred_reg)
+    reg_loss1 = tf.reduce_sum(L1_loss_all, axis = 1) * fpmask
+    reg_loss = tf.reduce_sum(reg_loss1)
+    '''
+    
     smooth_L1_loss_all = smooth_L1(y_true_reg - y_pred_reg)
     reg_loss1 = tf.reduce_sum(smooth_L1_loss_all, axis=1) * fpmask
     reg_loss = tf.reduce_sum(reg_loss1)
+    
     '''
     cls_loss = p_conf_loss + hn_conf_loss
     loss_all = cls_loss + reg_loss
     loss = tf.reduce_sum(loss_all / p_num)
     '''
 
-    #loss = tf.reduce_sum(reg_loss / p_num)
-    loss = (p_conf_loss + reg_loss + hn_conf_loss) / p_num
+    #loss = reg_loss / (p_num + 1e-7)
+    #loss = (p_conf_loss + hn_conf_loss) / (p_num + 1e-7)
+    loss = (p_conf_loss + reg_loss + hn_conf_loss) / (p_num + 1e-7)
     return loss
 
 

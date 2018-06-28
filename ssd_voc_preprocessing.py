@@ -299,7 +299,7 @@ def Read_Dataset(root_path=dataset_path, batch_size=128):
         
 
 
-Read_Dataset(dataset_path)
+Read_Dataset(dataset_path, 128)
 
 
     

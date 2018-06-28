@@ -16,10 +16,17 @@ SSD:Single Shot MultiBox Detector
 * opencv 3.4.0(python)
 
 ## 文件架构
-* ssd.py：网络构架与编译
+* ssd.py：网络构架与编译，网络训练及预测
 * ssd_voc_preprocessing.py：VOC2007数据集预处理，包括XML的解析，anchor的预处理等
 * ssd_utils.py：一些工具与子函数
+* ssd_losses.py：使用tensorflow计算loss
+* ssd_getoutput.py：读取网络预测的结果（pickle文件），并框出物体
+* ssd_loaddata.py：读取经ssd_voc_preprocessing.py处理出来的pickle，用生成器的方式喂给网络
 
 ## 使用方法
-还没写完。。。差了很多呢。。。
+* 下载VOC2007 Trainval数据集，解压放置在dataset下
+* 根目录下 `python ssd_voc_preprocessing.py`，会在datasave中生成一系列pickle文件
+* 下载VGG16的模型权重文件，notop的即可，放在pretrain下
+* 使用 `python ssd.py`进行训练
+* 使用 `python ssd_getoutput.py`查看检测效果
 
